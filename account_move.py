@@ -8,7 +8,7 @@ cursor = conn.cursor()
 reader = csv.reader(open('account_move.csv','rt',encoding='utf8'))
 s = 0
 
-
+existe = False
 for row in reader:
 
     print (row[2]) #impresion de prueba del campo num_asiento
@@ -33,13 +33,21 @@ for row in reader:
         cursor.execute(statement,(row[2],num_asiento,diario,partner,row[4],row[3]))
         conn.commit()
         move_id=cursor.fetchone()[0]#obtenemos el id generado
-        #
+        consulta = "select name from ir_model_data where name = 'account_move_' ||%s"
+        cursor.execute(consulta,(str(viejo_id),))
+        for record in cursor:
+            print (record)
+            existe = True
+        if existe:
+            update_query = "delete from ir_model_data where name = 'account_move_' || %s "
+            cursor.execute(update_query,(str(viejo_id),))
+            conn.commit()
         statement2 = "insert into ir_model_data(create_date,write_uid,name,module,model,res_id,migra)"\
         "VALUES('2018-12-09',1,'account_move_' || %s,'__export__','account.move',%s,TRUE)"
-        cursor.execute(statement2,(move_id,move_id)) #insertamos manualmente en la tabla ir_model_data los valores para futuras exportaciones
+        cursor.execute(statement2,(viejo_id,move_id)) #insertamos manualmente en la tabla ir_model_data los valores para futuras exportaciones
         conn.commit()
         print('Fila creada:',s)
-    s =+ 1
+    s += 1
 
 
 
